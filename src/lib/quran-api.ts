@@ -33,10 +33,13 @@ export async function fetchSurahList(): Promise<Surah[]> {
 
 export async function fetchSurahDetail(surahNumber: number): Promise<Surah | null> {
   try {
-    // Fetch Arabic text and Bangla translation
-    const [arabicResponse, banglaResponse] = await Promise.all([
+    // Fetch Arabic text, Bangla translation, word-by-word meanings, and tafsir
+    const [arabicResponse, banglaResponse, wordByWordResponse, tafsirResponse] = await Promise.all([
       fetch(`${API_BASE}/surah/${surahNumber}`),
       fetch(`${API_BASE}/surah/${surahNumber}/${BANGLA_TRANSLATION}`),
+      fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surahNumber}?language=bn&words=true&per_page=300&fields=text_uthmani,words`),
+      // Fetch Tafsir Ibn Kathir in Bangla (resource_id: 163)
+      fetch(`https://api.quran.com/api/v4/quran/tafsirs/163?chapter_number=${surahNumber}`)
     ]);
 
     const arabicData = await arabicResponse.json();
@@ -49,17 +52,13 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
     const surah = arabicData.data;
     const banglaAyahs = banglaData.data.ayahs;
 
-    // Fetch word-by-word meanings from Quran.com API v4
+    // Process word-by-word data from Quran.com API v4
     let wordByWordData: any = {};
     try {
-      // Fetch all verses with word details for this surah
-      const response = await fetch(
-        `https://api.quran.com/api/v4/verses/by_chapter/${surahNumber}?language=bn&words=true&per_page=300&fields=text_uthmani,words`
-      );
-      const data = await response.json();
+      const wordData = await wordByWordResponse.json();
       
-      if (data.verses) {
-        data.verses.forEach((verse: any) => {
+      if (wordData.verses) {
+        wordData.verses.forEach((verse: any) => {
           if (verse.words) {
             wordByWordData[verse.verse_number] = verse.words;
           }
@@ -67,6 +66,22 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
       }
     } catch (error) {
       console.error("Error fetching word-by-word from Quran.com:", error);
+    }
+
+    // Process tafsir data from Quran.com API v4
+    let tafsirData: any = {};
+    try {
+      const tafsirJson = await tafsirResponse.json();
+      
+      if (tafsirJson.tafsirs) {
+        tafsirJson.tafsirs.forEach((tafsir: any) => {
+          // verse_key format is "58:1" for surah 58, ayah 1
+          const ayahNumber = parseInt(tafsir.verse_key.split(':')[1]);
+          tafsirData[ayahNumber] = tafsir.text;
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching tafsir from Quran.com:", error);
     }
 
     // Convert to our format
@@ -94,14 +109,21 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
         words = parseWordsFromText(ayah.text);
       }
 
+      // Get actual tafsir from API or generate fallback
+      const actualTafsir = tafsirData[ayah.numberInSurah] || '';
+      const shortTafsir = actualTafsir 
+        ? actualTafsir.substring(0, 250).trim() + (actualTafsir.length > 250 ? '...' : '')
+        : generateShortTafsir(banglaAyah?.text);
+      const fullTafsir = actualTafsir || generateFullTafsir(ayah.numberInSurah, banglaAyah?.text, surah.englishName);
+
       return {
         ayahNumber: ayah.numberInSurah,
         text_ar: ayah.text,
         words: words,
         translation_bn: banglaAyah?.text || "অনুবাদ উপলব্ধ নেই",
-        tafsir_short_bn: generateShortTafsir(banglaAyah?.text),
-        tafsir_full_bn: generateFullTafsir(ayah.numberInSurah, banglaAyah?.text, surah.englishName),
-        audio_url: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`,
+        tafsir_short_bn: shortTafsir,
+        tafsir_full_bn: fullTafsir,
+        audio_url: `https://everyayah.com/data/Alafasy_128kbps/${String(surahNumber).padStart(3, '0')}${String(ayah.numberInSurah).padStart(3, '0')}.mp3`,
       };
     });
 
@@ -114,9 +136,9 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
       revelation: surah.revelationType === "Meccan" ? "Makki" : "Madani",
       ayahs,
       meta: {
-        source_ar: "Al-Quran Cloud (Uthmani Script)",
-        source_translation: "Muhiuddin Khan Bangla Translation",
-        source_tafsir: "Context-based tafsir",
+        source_ar: "Al-Quran Cloud (Uthmani script)",
+        source_translation: "মুহিউদ্দীন খান (Muhiuddin Khan) Bangla Translation",
+        source_tafsir: "তাফসীর ইবনে কাসীর (বাংলা) - Tafsir Ibn Kathir Bangla",
         license: "Creative Commons - Public Domain",
       },
     };
