@@ -103,13 +103,8 @@ export function TafsirModal({
             <h3 className="text-sm font-semibold bangla-text mb-3 text-muted-foreground">
               বিস্তারিত তাফসির
             </h3>
-            <div className="prose prose-sm max-w-none bangla-text leading-relaxed">
-              <p>{ayah.tafsir_full_bn}</p>
-              
-              {/* Placeholder for more detailed tafsir content */}
-              <p className="text-muted-foreground text-sm mt-4">
-                ⚠️ বিস্তারিত তাফসির লাইসেন্সকৃত উৎস থেকে লোড করা হবে।
-              </p>
+            <div className="prose prose-sm max-w-none bangla-text leading-relaxed whitespace-pre-wrap">
+              {ayah.tafsir_full_bn}
             </div>
           </div>
 

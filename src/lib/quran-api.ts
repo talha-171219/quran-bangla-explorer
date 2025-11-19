@@ -72,6 +72,7 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
     let tafsirData: any = {};
     try {
       const tafsirJson = await tafsirResponse.json();
+      console.log("Tafsir API response:", tafsirJson);
       
       if (tafsirJson.tafsirs) {
         tafsirJson.tafsirs.forEach((tafsir: any) => {
@@ -79,6 +80,7 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
           const ayahNumber = parseInt(tafsir.verse_key.split(':')[1]);
           tafsirData[ayahNumber] = tafsir.text;
         });
+        console.log("Processed tafsir data:", Object.keys(tafsirData).length, "ayahs");
       }
     } catch (error) {
       console.error("Error fetching tafsir from Quran.com:", error);
@@ -111,6 +113,8 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
 
       // Get actual tafsir from API - no fallback generation
       const actualTafsir = tafsirData[ayah.numberInSurah] || '';
+      console.log(`Ayah ${ayah.numberInSurah} tafsir length:`, actualTafsir.length);
+      
       const shortTafsir = actualTafsir 
         ? actualTafsir.substring(0, 200).trim() + (actualTafsir.length > 200 ? '...' : '')
         : 'তাফসির লোড হচ্ছে...';
