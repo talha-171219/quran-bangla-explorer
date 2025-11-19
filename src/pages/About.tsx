@@ -5,16 +5,16 @@ import { ATTRIBUTION } from "@/lib/quran-api";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#0b5fff] to-[#7c5cff] text-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" asChild>
               <Link to="/" aria-label="Back to home">
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-white" />
               </Link>
             </Button>
-            <h1 className="text-xl font-bold bangla-text">সম্পর্কে ও অ্যাট্রিবিউশন</h1>
+            <h1 className="text-xl font-semibold">সম্পর্কে ও অ্যাট্রিবিউশন</h1>
           </div>
         </div>
       </header>
@@ -38,7 +38,6 @@ const About = () => {
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>শব্দে শব্দে বাংলা অর্থ</li>
                 <li>সম্পূর্ণ আয়াতের বাংলা অনুবাদ</li>
-                <li>আয়াত ভিত্তিক তাফসির</li>
                 <li>অফলাইন পড়ার সুবিধা</li>
                 <li>অডিও তেলাওয়াত (শীঘ্রই)</li>
                 <li>বুকমার্ক এবং নোট</li>
@@ -81,7 +80,7 @@ const About = () => {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="font-semibold mb-1 bangla-text">তাফসির</h3>
                 <p className="text-sm text-muted-foreground bangla-text">
-                  {ATTRIBUTION.tafsir}
+                  তাফসির (বিস্তারিত ব্যাখ্যা) এই সংস্করণে সরাসরি অন্তর্ভুক্ত করা হয়নি।
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 bangla-text">
                   বিস্তারিত তাফসিরের জন্য অনুমোদিত তাফসির গ্রন্থ দেখুন

@@ -11,15 +11,12 @@ export interface Ayah {
   text_ar: string;
   words: Word[];
   translation_bn: string;
-  tafsir_short_bn?: string;
-  tafsir_full_bn?: string;
   audio_url?: string;
 }
 
 export interface SurahMeta {
   source_ar: string;
   source_translation: string;
-  source_tafsir?: string;
   license: string;
 }
 
@@ -47,5 +44,4 @@ export interface Settings {
   showTransliteration: boolean;
   showWordMeanings: boolean;
   selectedTranslation?: string;
-  selectedTafsir?: string;
 }

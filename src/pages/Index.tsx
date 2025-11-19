@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Search, Settings, Info, BookMarked } from "lucide-react";
+import { Search, Settings, Info, BookMarked, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SurahCard } from "@/components/SurahCard";
+import surahPageMap from "@/lib/surah-page-map";
 import { Surah } from "@/types/quran";
 import { fetchSurahList } from "@/lib/quran-api";
 import { initDB, getAllSurahs, saveSurah } from "@/lib/db";
@@ -60,14 +61,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-slate-800 to-slate-700 text-white border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold text-white">
                 কুরআন শব্দে শব্দে
               </h1>
-              <p className="text-sm text-muted-foreground bangla-text">
+              <p className="text-sm text-slate-200 bangla-text">
                 Word by Word Quran in Bangla
               </p>
             </div>
@@ -77,6 +78,18 @@ const Index = () => {
                   <BookMarked className="w-5 h-5" />
                 </Link>
               </Button>
+              {/* Hafezi Quran link intentionally hidden from main UI
+                  The Hafezi mini-app remains in the codebase and is reachable
+                  via direct URL (e.g. /hafezi-quran-view/1) but should not be
+                  accessible from the main navigation. Uncomment below to
+                  re-enable the link. */}
+              {false && (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/hafezi-quran" aria-label="Hafezi Quran">
+                    <BookOpen className="w-5 h-5" />
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="icon" asChild>
                 <Link to="/settings" aria-label="Settings">
                   <Settings className="w-5 h-5" />
@@ -104,44 +117,51 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        {/* Info Card */}
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
-          <p className="text-sm bangla-text text-foreground">
-            📖 <strong>স্বাগতম!</strong> প্রতিটি সূরা খুলুন এবং প্রতিটি আরবি শব্দের
-            বাংলা অর্থ দেখুন। অফলাইন পড়ার জন্য সূরা ডাউনলোড করুন।
-          </p>
-        </div>
-
-        {/* Surah List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
-            <p className="mt-4 text-muted-foreground bangla-text">
-              সূরা তালিকা লোড হচ্ছে...
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredSurahs.length > 0 ? (
-              filteredSurahs.map((surah) => (
-                <SurahCard
-                  key={surah.surahNumber}
-                  surah={surah}
-                  isDownloaded={downloadedSurahs.has(surah.surahNumber)}
-                  onDownload={handleDownload}
-                />
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground bangla-text">
-                  কোন সূরা পাওয়া যায়নি
-                </p>
+      {/* Main Content - stylish multi-column list */}
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          {/* Info Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-border max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="sr-only">কুরআন — সূরা তালিকা</h2>
+                <p className="text-sm text-muted-foreground">সূরা খুলে শব্দে শব্দে অনুবাদ দেখুন</p>
               </div>
-            )}
+              <div className="text-sm text-muted-foreground">{surahs.length} সূরা</div>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground">📖 সূরা তালিকা থেকে যে কোন সূরা খুলে শব্দভিত্তিক বাংলা অর্থ দেখুন।</p>
+            </div>
           </div>
-        )}
+
+          {/* Surah Grid */}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
+              <p className="mt-4 text-muted-foreground bangla-text">সূরা তালিকা লোড হচ্ছে...</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredSurahs.length > 0 ? (
+                filteredSurahs.map((surah) => (
+                  <SurahCard
+                      key={surah.surahNumber}
+                      surah={surah}
+                      isDownloaded={downloadedSurahs.has(surah.surahNumber)}
+                      onDownload={handleDownload}
+                      // Open Surah detail page (default behaviour)
+                      linkTo={`/surah/${surah.surahNumber}`}
+                    />
+                ))
+              ) : (
+                <div className="text-center py-12 col-span-full">
+                  <p className="text-muted-foreground bangla-text">কোন সূরা পাওয়া যায়নি</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Attribution Footer */}

@@ -39,16 +39,16 @@ const Bookmarks = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#0b5fff] to-[#7c5cff] text-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" asChild>
               <Link to="/" aria-label="Back to home">
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-white" />
               </Link>
             </Button>
-            <h1 className="text-xl font-bold bangla-text">বুকমার্ক</h1>
+            <h1 className="text-xl font-semibold">বুকমার্ক</h1>
           </div>
         </div>
       </header>

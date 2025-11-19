@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Settings from "./pages/Settings";
 import Bookmarks from "./pages/Bookmarks";
 import NotFound from "./pages/NotFound";
+// Hafezi pages removed — imports intentionally deleted
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,8 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
+          {/* Hafezi mini-app routes removed */}
+          {/* removed duplicate/conflicting route for hafezi-quran-view */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

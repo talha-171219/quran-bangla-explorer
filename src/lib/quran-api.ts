@@ -33,13 +33,11 @@ export async function fetchSurahList(): Promise<Surah[]> {
 
 export async function fetchSurahDetail(surahNumber: number): Promise<Surah | null> {
   try {
-    // Fetch Arabic text, Bangla translation, word-by-word meanings, and tafsir
-    const [arabicResponse, banglaResponse, wordByWordResponse, tafsirResponse] = await Promise.all([
+    // Fetch Arabic text, Bangla translation, and word-by-word meanings
+    const [arabicResponse, banglaResponse, wordByWordResponse] = await Promise.all([
       fetch(`${API_BASE}/surah/${surahNumber}`),
       fetch(`${API_BASE}/surah/${surahNumber}/${BANGLA_TRANSLATION}`),
       fetch(`https://api.quran.com/api/v4/verses/by_chapter/${surahNumber}?language=bn&words=true&per_page=300&fields=text_uthmani,words`),
-      // Fetch Tafsir Ibn Kathir in Bangla (resource_id: 163)
-      fetch(`https://api.quran.com/api/v4/quran/tafsirs/163?chapter_number=${surahNumber}`)
     ]);
 
     const arabicData = await arabicResponse.json();
@@ -68,21 +66,7 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
       console.error("Error fetching word-by-word from Quran.com:", error);
     }
 
-    // Process tafsir data from Quran.com API v4
-    let tafsirData: any = {};
-    try {
-      const tafsirJson = await tafsirResponse.json();
-      
-      if (tafsirJson.tafsirs) {
-        tafsirJson.tafsirs.forEach((tafsir: any) => {
-          // verse_key format is "58:1" for surah 58, ayah 1
-          const ayahNumber = parseInt(tafsir.verse_key.split(':')[1]);
-          tafsirData[ayahNumber] = tafsir.text;
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching tafsir from Quran.com:", error);
-    }
+    // Tafsir removed from this build; no tafsir data will be included.
 
     // Convert to our format
     const ayahs: Ayah[] = surah.ayahs.map((ayah: any, index: number) => {
@@ -109,20 +93,12 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
         words = parseWordsFromText(ayah.text);
       }
 
-      // Get actual tafsir from API - no fallback generation
-      const actualTafsir = tafsirData[ayah.numberInSurah] || '';
-      const shortTafsir = actualTafsir 
-        ? actualTafsir.substring(0, 200).trim() + (actualTafsir.length > 200 ? '...' : '')
-        : 'তাফসির লোড হচ্ছে...';
-      const fullTafsir = actualTafsir || 'এই আয়াতের বিস্তারিত তাফসির শীঘ্রই যুক্ত করা হবে।';
-
       return {
         ayahNumber: ayah.numberInSurah,
         text_ar: ayah.text,
         words: words,
         translation_bn: banglaAyah?.text || "অনুবাদ উপলব্ধ নেই",
-        tafsir_short_bn: shortTafsir,
-        tafsir_full_bn: fullTafsir,
+        // tafsir fields removed
         audio_url: `https://everyayah.com/data/Alafasy_128kbps/${String(surahNumber).padStart(3, '0')}${String(ayah.numberInSurah).padStart(3, '0')}.mp3`,
       };
     });
@@ -138,7 +114,6 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
       meta: {
         source_ar: "Al-Quran Cloud (Uthmani script)",
         source_translation: "মুহিউদ্দীন খান (Muhiuddin Khan) Bangla Translation",
-        source_tafsir: "তাফসীর ইবনে কাসীর (বাংলা) - Tafsir Ibn Kathir Bangla",
         license: "Creative Commons - Public Domain",
       },
     };
@@ -172,7 +147,7 @@ function getWordMeaningFallback(arabicWord: string): string {
     "بِسۡمِ": "নামে",
     "ٱلرَّحۡمَـٰنِ": "পরম করুণাময়",
     "ٱلرَّحِیمِ": "অতি দয়ালু",
-    "ٱلۡحَمۡدُ": "প্রশংসা",
+    "ٱلۡحَمۡদُ": "প্রশংসা",
     "رَبِّ": "রব/প্রতিপালক",
     "ٱلۡعَـٰلَمِینَ": "সকল জগতের",
     "مَـٰلِكِ": "মালিক",
@@ -194,7 +169,7 @@ function getWordMeaningFallback(arabicWord: string): string {
     "وَلَا": "এবং না",
     "ٱلضَّاۤلِّینَ": "পথভ্রষ্ট",
     "مِنَ": "থেকে",
-    "ٱلۡكِتَـٰبِ": "কিতাবের",
+    "ٱلۡكِتَـٰবِ": "কিতাবের",
     "فِی": "মধ্যে",
     "ذَ ٰ⁠لِكَ": "এটি",
     "هُدࣰى": "হেদায়েত",
@@ -293,7 +268,7 @@ function getBanglaSurahName(englishName: string): string {
     "Al-Mulk": "মুলক",
     "Al-Qalam": "কলম",
     "Al-Haaqqa": "হাক্কা",
-    "Al-Ma'aarij": "মাআরিজ",
+    "Al-Ma'aarিজ": "মাআরিজ",
     "Nooh": "নূহ",
     "Al-Jinn": "জিন্ন",
     "Al-Muzzammil": "মুযযাম্মিল",
@@ -350,6 +325,69 @@ function getCachedSurahList(): Surah[] {
     { surahNumber: 2, name: "البقرة", name_bn: "বাকারা", englishName: "Al-Baqara", ayahCount: 286, revelation: 'Madani' },
     { surahNumber: 36, name: "يس", name_bn: "ইয়াসিন", englishName: "Yaseen", ayahCount: 83, revelation: 'Makki' },
   ];
+}
+
+export async function fetchPageAyatMapping(pageNumber: number): Promise<{ surahName: string; ayatRange: string } | null> {
+  const mapping = {
+    1: { surahName: "Al-Faatiha", ayatRange: "1-7" },
+    2: { surahName: "Al-Baqara", ayatRange: "1-5" },
+    // Add mappings for all pages
+  };
+
+  return mapping[pageNumber] || null;
+}
+
+export async function fetchQuranPageContent(pageNumber: number): Promise<string | null> {
+  try {
+    // Directly fetch verses for the page (reliable endpoint) and assemble HTML
+    const versesResp = await fetch(`${QURAN_COM_API}/verses/by_page/${pageNumber}?language=ar&fields=text_uthmani,verse_number`);
+    if (!versesResp.ok) {
+      console.error('fetchQuranPageContent: verses endpoint returned', versesResp.status);
+      return null;
+    }
+    const versesJson = await versesResp.json();
+    if (!versesJson.verses || versesJson.verses.length === 0) return null;
+
+    const htmlParts: string[] = [];
+    htmlParts.push('<div dir="rtl" class="arabic-text">');
+    versesJson.verses.forEach((v: any) => {
+      const ayahText = v.text_uthmani || v.text || "";
+      const num = v.verse_number || "";
+      htmlParts.push(`<p style="margin:0 0 0.5rem;font-size:1.6rem;line-height:2;">${ayahText} <sup style=\"font-size:0.7rem;margin-left:0.5rem;\">${num}</sup></p>`);
+    });
+    htmlParts.push('</div>');
+
+    return htmlParts.join("\n");
+  } catch (error) {
+    console.error("Error fetching Quran page content:", error);
+    return null;
+  }
+}
+
+// Get the starting page number for a given Surah using Quran.com verses endpoint
+export async function fetchSurahStartPage(surahNumber: number): Promise<number | null> {
+  try {
+    const resp = await fetch(`${QURAN_COM_API}/verses/by_chapter/${surahNumber}?per_page=1&language=en&fields=page_number`);
+    if (!resp.ok) return null;
+    const j = await resp.json();
+    if (j.verses && j.verses.length > 0 && typeof j.verses[0].page_number === 'number') {
+      return j.verses[0].page_number;
+    }
+    return null;
+  } catch (err) {
+    console.error('Error fetching surah start page:', err);
+    return null;
+  }
+}
+
+export async function verifySurahAyatMapping(pageNumber: number): Promise<{ surahName: string; ayatRange: string } | null> {
+  const mapping = {
+    1: { surahName: "Al-Faatiha", ayatRange: "1-7" },
+    2: { surahName: "Al-Baqara", ayatRange: "1-5" },
+    // Add mappings for all pages
+  };
+
+  return mapping[pageNumber] || null;
 }
 
 export const ATTRIBUTION = {
