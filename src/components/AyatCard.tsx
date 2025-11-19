@@ -1,9 +1,9 @@
 import { Ayah } from "@/types/quran";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Copy, Share2, BookMarked } from "lucide-react";
-import { useState } from "react";
+import { Play, Pause, Copy, Share2, BookMarked, Loader2 } from "lucide-react";
 import { WordChip } from "./WordChip";
 import { toast } from "sonner";
+import { useAudioPlayer } from "@/hooks/use-audio-player";
 
 interface AyatCardProps {
   ayah: Ayah;
@@ -18,7 +18,10 @@ export function AyatCard({
   onOpenTafsir,
   showWordMeanings = true,
 }: AyatCardProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { isPlaying, isLoading, currentAyah, play } = useAudioPlayer();
+  const ayahKey = `${surahNumber}:${ayah.ayahNumber}`;
+  const isThisAyahPlaying = currentAyah === ayahKey && isPlaying;
+  const isThisAyahLoading = currentAyah === ayahKey && isLoading;
 
   const handleCopy = () => {
     const text = `${ayah.text_ar}\n\nঅনুবাদ: ${ayah.translation_bn}\n\n(সূরা ${surahNumber}, আয়াত ${ayah.ayahNumber})`;
@@ -40,10 +43,8 @@ export function AyatCard({
     }
   };
 
-  const handlePlayAudio = () => {
-    // Audio playback implementation would go here
-    setIsPlaying(!isPlaying);
-    toast.info("অডিও প্লেব্যাক শীঘ্রই আসছে");
+  const handlePlayAudio = async () => {
+    await play(surahNumber, ayah.ayahNumber);
   };
 
   return (
@@ -63,9 +64,12 @@ export function AyatCard({
             size="icon"
             onClick={handlePlayAudio}
             className="h-8 w-8"
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={isThisAyahPlaying ? "Pause" : "Play"}
+            disabled={isThisAyahLoading}
           >
-            {isPlaying ? (
+            {isThisAyahLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isThisAyahPlaying ? (
               <Pause className="w-4 h-4" />
             ) : (
               <Play className="w-4 h-4" />
