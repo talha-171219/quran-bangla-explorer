@@ -109,12 +109,12 @@ export async function fetchSurahDetail(surahNumber: number): Promise<Surah | nul
         words = parseWordsFromText(ayah.text);
       }
 
-      // Get actual tafsir from API or generate fallback
+      // Get actual tafsir from API - no fallback generation
       const actualTafsir = tafsirData[ayah.numberInSurah] || '';
       const shortTafsir = actualTafsir 
-        ? actualTafsir.substring(0, 250).trim() + (actualTafsir.length > 250 ? '...' : '')
-        : generateShortTafsir(banglaAyah?.text);
-      const fullTafsir = actualTafsir || generateFullTafsir(ayah.numberInSurah, banglaAyah?.text, surah.englishName);
+        ? actualTafsir.substring(0, 200).trim() + (actualTafsir.length > 200 ? '...' : '')
+        : 'তাফসির লোড হচ্ছে...';
+      const fullTafsir = actualTafsir || 'এই আয়াতের বিস্তারিত তাফসির শীঘ্রই যুক্ত করা হবে।';
 
       return {
         ayahNumber: ayah.numberInSurah,
@@ -220,68 +220,6 @@ function getWordMeaningFallback(arabicWord: string): string {
   return "অর্থ";
 }
 
-// Generate short tafsir summary from translation
-function generateShortTafsir(translation: string | undefined): string {
-  if (!translation) return "তাফসির উপলব্ধ নেই";
-  
-  // Take first sentence or first 100 characters as short summary
-  const firstSentence = translation.split(/[।.!]/)[0];
-  return firstSentence.length > 150 
-    ? firstSentence.substring(0, 150) + "..." 
-    : firstSentence + "।";
-}
-
-// Generate full tafsir with context
-function generateFullTafsir(ayahNumber: number, translation: string | undefined, surahName: string): string {
-  if (!translation) {
-    return "এই আয়াতের বিস্তারিত তাফসির শীঘ্রই যুক্ত করা হবে। বর্তমানে শুধুমাত্র অনুবাদ উপলব্ধ।";
-  }
-
-  // Generate comprehensive tafsir based on the ayah content
-  return `
-**আয়াতের মূল বিষয়বস্তু:**
-${translation}
-
-**বিস্তারিত ব্যাখ্যা:**
-
-এই আয়াতে আল্লাহ সুবহানাহু ওয়া তা'আলা আমাদের জন্য গুরুত্বপূর্ণ দিকনির্দেশনা প্রদান করেছেন। পবিত্র কুরআনের প্রতিটি আয়াত আল্লাহর পক্ষ থেকে মানবজাতির জন্য এক অমূল্য উপহার এবং পথপ্রদর্শক।
-
-**প্রসঙ্গ ও পটভূমি:**
-সূরা ${surahName} এর এই আয়াতটি মুমিন মুসলমানদের জন্য বিশেষ তাৎপর্যপূর্ণ। এতে আল্লাহ তা'আলা তাঁর বান্দাদের উদ্দেশ্যে স্পষ্ট বাণী প্রদান করেছেন যা আমাদের ঈমান ও আমলকে সুদৃঢ় করে।
-
-**শিক্ষা ও উপদেশ:**
-
-১. **তাওহীদের গুরুত্ব:** এই আয়াত আমাদের স্মরণ করিয়ে দেয় যে আল্লাহ এক ও অদ্বিতীয়। তাঁর কোন শরীক নেই এবং তিনিই সর্বশক্তিমান।
-
-২. **জীবন পরিচালনা:** কুরআনের এই শিক্ষা আমাদের দৈনন্দিন জীবনে কীভাবে চলতে হবে তার দিকনির্দেশনা দেয়।
-
-৩. **আখিরাতের প্রস্তুতি:** এই আয়াতের মাধ্যমে আল্লাহ আমাদের পরকালের জন্য প্রস্তুত হতে উৎসাহিত করেন।
-
-৪. **নৈতিক মূল্যবোধ:** ইসলামী নীতি ও মূল্যবোধের প্রতিফলন এই আয়াতে স্পষ্টভাবে প্রকাশ পেয়েছে।
-
-**ব্যাবহারিক প্রয়োগ:**
-
-এই আয়াতের শিক্ষা আমরা আমাদের জীবনে বাস্তবায়ন করতে পারি:
-- নিয়মিত কুরআন তিলাওয়াত ও অর্থ বোঝার চেষ্টা করা
-- আল্লাহর প্রতি দৃঢ় বিশ্বাস স্থাপন করা
-- সৎকর্ম ও নেক আমল করা
-- অন্যায় ও পাপ থেকে বিরত থাকা
-
-**আলেমদের মতামত:**
-
-বিখ্যাত মুফাসসিরগণ এই আয়াত সম্পর্কে বলেছেন যে, এটি মুমিনদের জন্য আল্লাহর রহমত ও করুণার প্রকাশ। তাঁরা এই আয়াতের গভীর অর্থ ও তাৎপর্য ব্যাখ্যা করেছেন যা আমাদের ঈমানকে আরো শক্তিশালী করে।
-
-**সারসংক্ষেপ:**
-
-${surahName} সূরার এই আয়াতটি আমাদের জন্য আল্লাহর পক্ষ থেকে বিশেষ উপদেশ ও দিকনির্দেশনা। এর শিক্ষা অনুসরণ করে আমরা দুনিয়া ও আখিরাতে সফলকাম হতে পারি।
-
----
-
-**গুরুত্বপূর্ণ দ্রষ্টব্য:** এই তাফসির সাধারণ ব্যাখ্যা ও প্রসঙ্গ ভিত্তিক বিশ্লেষণ। আরো বিস্তারিত এবং গভীর জ্ঞানের জন্য স্বীকৃত আলেমদের তাফসির গ্রন্থ যেমন তাফসীর ইবনে কাসীর, তাফসীরে জালালাইন, তাফহীমুল কুরআন (মাওলানা মওদূদী), মা'আরিফুল কুরআন প্রভৃতি পড়ুন।
-
-**তথ্যসূত্র:** মুহিউদ্দীন খান বাংলা অনুবাদ ও প্রসঙ্গভিত্তিক ব্যাখ্যা।
-  `.trim();
-}
 
 // Get Bangla surah names
 function getBanglaSurahName(englishName: string): string {
